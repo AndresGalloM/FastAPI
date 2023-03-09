@@ -6,8 +6,8 @@ class Movie(Base):
     __tablename__ =  'movies'
     
     id = Column(Integer, primary_key=True)
-    title = Column(String(50))
+    title = Column(String(50), unique=True)
     overview = Column(String(999))
-    category = Column(String(100))
+    categories = Column(String(100))
     year = Column(Date)
     disabled = Column(Boolean)
