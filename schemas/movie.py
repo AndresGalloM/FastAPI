@@ -1,12 +1,13 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
+from datetime import date
 
 class Movie(BaseModel):
     id: Optional[int] = Field(None, gt=0)
     title: str = Field(..., min_length=5, max_length=50)
-    overview: str = Field(..., min_length=1, max_length=100)
-    category: List
-    year: str = Field(..., min_length=10, max_length=10)
+    overview: str = Field(..., min_length=1, max_length=500)
+    categories: List
+    year: date
     disabled: bool
 
     class Config:
