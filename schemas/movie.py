@@ -1,6 +1,8 @@
+import json
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import date
+
 
 class Movie(BaseModel):
     id: Optional[int] = Field(None, gt=0)
@@ -21,3 +23,28 @@ class Movie(BaseModel):
                 'disabled': False
             }
         }
+
+    def convert_movie(movie):
+        return {
+            'id': movie.id,
+            'title': movie.title,
+            'overview': movie.overview,
+            'categories': json.loads(movie.categories),
+            'year': movie.year,
+            'disabled': movie.disabled
+        }
+
+    def convert_movies(movies):
+        list_movies = []
+
+        for movie in movies:
+            list_movies.append({
+                'id': movie.id,
+                'title': movie.title,
+                'overview': movie.overview,
+                'categories': json.loads(movie.categories),
+                'year': movie.year,
+                'disabled': movie.disabled
+            })
+
+        return list_movies

@@ -1,4 +1,6 @@
+import json
 from fastapi import APIRouter, Path, status, HTTPException
+from fastapi.encoders import jsonable_encoder
 from config.database import Session
 from typing import List, Dict, Union
 from models.movie import Movie
@@ -6,10 +8,33 @@ from schemas.movie import Movie as MovieSchema
 
 
 router = APIRouter(
-    prefix='/movie',
+    prefix='/api/v1/movie',
     tags=['movie']
 )
 
+@router.get('', response_model=List)
+def all_movies():
+    movies = Session().query(Movie).all()
+
+    if movies:
+        return MovieSchema.convert_movies(movies)
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail='Error getting the movies'
+    )
+
+@router.get('/{id}', response_model=Dict)
+def one_movie(id: int = Path(..., gt=0)):
+    movie = Session().query(Movie).filter(Movie.id == id).first()
+
+    if movie:
+        return MovieSchema.convert_movie(movie)
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail='The movie does not exist'
+    )
 
 @router.post(
     '',
@@ -19,13 +44,13 @@ router = APIRouter(
 )
 def create_movie(movie: MovieSchema):
     try:
-        movie.categories = str(movie.categories)
-        conexion_db = Session()
+        movie.categories = json.dumps(movie.categories)
+        session = Session()
         new_movie = Movie(**movie.dict())
-        conexion_db.add(new_movie)
-        conexion_db.commit()
+        session.add(new_movie)
+        session.commit()
         
-        return movie
+        return MovieSchema.convert_movie(movie)
     except Exception as ex:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
