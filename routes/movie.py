@@ -42,17 +42,16 @@ async def one_movie(id: int = Path(..., gt=0)):
 @router.post(
     '',
     status_code=status.HTTP_201_CREATED,
-    # response_model=Union[MovieSchema, Dict],
+    response_model=Union[MovieSchema, Dict],
     description='Operation to create a new movie'
 )
 async def create_movie(movie: MovieSchema):
     try:
         movie.categories = json.dumps(movie.categories)
         session = Session()
-        new_movie = Movie(**movie.dict())
-        session.add(new_movie)
+        session.add(Movie(**movie.dict()))
         session.commit()
-        
+
         return MovieSchema.convert_movie(movie)
     except Exception as ex:
         raise HTTPException(
@@ -60,3 +59,25 @@ async def create_movie(movie: MovieSchema):
             detail=f'Error creating movie: {ex.__cause__}'
         )
 
+@router.put('/{id}', response_model=Dict)
+def update_movie(movie: MovieSchema, id: int = Path(..., gt=0)):
+    session = Session()
+
+    movie.categories = json.dumps(movie.categories)
+    movie.id = id
+    updated = session.query(Movie).filter(Movie.id == id).update(movie.dict())  
+    
+    if not updated:
+        session.close()
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Movie no found'
+        )
+    
+    session.commit()
+        
+    return MovieSchema.convert_movie(movie)
+
+    
+
+# @router.delete('', )
