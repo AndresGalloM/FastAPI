@@ -1,6 +1,6 @@
 import json
-from fastapi import APIRouter, Path, Query, status, HTTPException
-from fastapi.encoders import jsonable_encoder
+from fastapi import APIRouter, Path, Query, status
+from fastapi.responses import JSONResponse
 from config.database import Session
 from typing import List, Dict, Union
 from models.movie import Movie
@@ -22,9 +22,9 @@ async def get_movie_by_category(category: str = Query(None, max_length=20, min_l
     if movies:
         return MovieSchema.convert_movies(movies)
 
-    raise HTTPException(
+    return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
-        detail='No movies found'
+        content={'error': {'message': 'No movies found'}}
     )
 
 @router.get('/{id}', response_model=Dict)
@@ -34,9 +34,9 @@ async def one_movie(id: int = Path(..., gt=0)):
     if movie:
         return MovieSchema.convert_movie(movie)
 
-    raise HTTPException(
+    return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
-        detail='The movie does not exist'
+        content={'error': {'message': 'The movie does not exist'}}
     )
 
 @router.post(
@@ -54,9 +54,9 @@ async def create_movie(movie: MovieSchema):
 
         return MovieSchema.convert_movie(movie)
     except Exception as ex:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f'Error creating movie: {ex.__cause__}'
+            content={'error': {'message': f'Error creating movie: {ex.__cause__}'}}
         )
 
 @router.put('/{id}', response_model=Dict)
@@ -69,15 +69,28 @@ def update_movie(movie: MovieSchema, id: int = Path(..., gt=0)):
     
     if not updated:
         session.close()
-        raise HTTPException(
+        raise JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Movie no found'
+            content={'error': {'message': 'Movie no found'}}
         )
     
     session.commit()
         
     return MovieSchema.convert_movie(movie)
 
-    
+@router.delete('/{id}')
+def delete_movie(id: int = Path(..., gt=0)):
+    session = Session()
+    eliminated = session.query(Movie).filter(Movie.id == id).delete()
+    session.commit()
 
-# @router.delete('', )
+    if not eliminated:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={'error': {'message': 'The movie does not exist'}}
+        )
+    
+    return JSONResponse(
+        content={'message': 'The movie was successfully removed.'},
+        status_code=status.HTTP_201_CREATED
+    )
