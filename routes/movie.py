@@ -9,7 +9,7 @@ from services.movie import MovieServices
 
 
 router = APIRouter(
-    prefix='/api/v1/movie',
+    prefix='/movie',
     tags=['movie']
 )
 
