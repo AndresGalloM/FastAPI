@@ -12,4 +12,6 @@ class MovieServices:
             movies = self.session.query(Movie).all()
         
         return movies
-            
+
+    def get_movie(self, id):
+        return self.session.query(Movie).filter(Movie.id == id).first()

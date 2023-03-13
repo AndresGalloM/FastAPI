@@ -27,7 +27,7 @@ async def get_movie_by_category(category: str = Query(None, max_length=20, min_l
 
 @router.get('/{id}', response_model=Dict)
 async def one_movie(id: int = Path(..., gt=0)):
-    movie = Session().query(Movie).filter(Movie.id == id).first()
+    movie = MovieServices().get_movie(id)
 
     if movie:
         return MovieSchema.convert_movie(movie)
