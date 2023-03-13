@@ -4,7 +4,8 @@ from fastapi.responses import JSONResponse
 from config.database import Session
 from typing import List, Dict, Union
 from models.movie import Movie
-from schemas.movie import Movie as MovieSchema 
+from schemas.movie import Movie as MovieSchema
+from services.movie import MovieServices
 
 
 router = APIRouter(
@@ -14,11 +15,8 @@ router = APIRouter(
 
 @router.get('', response_model=Union[List, Dict])
 async def get_movie_by_category(category: str = Query(None, max_length=20, min_length=3)):
-    if category:
-        movies = Session().query(Movie).filter(Movie.categories.like(f'%"{category}"%')).all()
-    else:
-        movies = Session().query(Movie).all()
-    
+    movies = MovieServices().get_movies(category)
+
     if movies:
         return MovieSchema.convert_movies(movies)
 
