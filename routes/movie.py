@@ -45,10 +45,7 @@ async def one_movie(id: int = Path(..., gt=0)):
 )
 async def create_movie(movie: MovieSchema):
     try:
-        movie.categories = json.dumps(movie.categories)
-        session = Session()
-        session.add(Movie(**movie.dict()))
-        session.commit()
+        MovieServices().create_movie(movie)
 
         return MovieSchema.convert_movie(movie)
     except Exception as ex:
@@ -59,29 +56,20 @@ async def create_movie(movie: MovieSchema):
 
 @router.put('/{id}', response_model=Dict)
 def update_movie(movie: MovieSchema, id: int = Path(..., gt=0)):
-    session = Session()
-
-    movie.categories = json.dumps(movie.categories)
-    movie.id = id
-    updated = session.query(Movie).filter(Movie.id == id).update(movie.dict())  
+    updated = MovieServices().update_movie(id, movie)
     
     if not updated:
-        session.close()
-        raise JSONResponse(
+        return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
             content={'error': {'message': 'Movie no found'}}
         )
-    
-    session.commit()
         
     return MovieSchema.convert_movie(movie)
 
 @router.delete('/{id}')
 def delete_movie(id: int = Path(..., gt=0)):
-    session = Session()
-    eliminated = session.query(Movie).filter(Movie.id == id).delete()
-    session.commit()
-
+    eliminated = MovieServices().delete_movie(id)
+    
     if not eliminated:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
