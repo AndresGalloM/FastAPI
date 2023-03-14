@@ -5,5 +5,7 @@ class UserServices:
     def __init__(self):
         self.session = Session()
 
-    def get_user_by_id(self, id: int):
-        return self.session.query(User).filter(User.id == id).first()
+    def get_user(self, user: str, password: str):
+        return self.session.query(User).filter(
+            User.name == user, User.password == password
+        ).first()
